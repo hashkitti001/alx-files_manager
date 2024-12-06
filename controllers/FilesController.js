@@ -100,4 +100,18 @@ const postUpload = async (req, res) => {
     }
 };
 
-export { postUpload };
+const getShow = async (req, res) => {
+    /**
+     *  Retrieves a file document based on the ID.
+     */
+    const { user } = req
+    const { id } = req.params.id
+    const file = await dbClient.db().collection("files").findOne({ id })
+    if (id && !file) {
+        res.status(404).json({ "error": "Not found" })
+        return
+    }
+    res.status(200).json({ file })
+    return
+}
+export { postUpload, getShow };
