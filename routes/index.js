@@ -1,7 +1,7 @@
 import express from 'express'
 import { getStats, getStatus } from '../controllers/AppController'
-import { postNew } from '../controllers/UserController'
-import { getConnect } from '../controllers/AuthController'
+import { postNew, getMe } from '../controllers/UserController'
+import { getConnect, getDisconnect } from '../controllers/AuthController'
 const router = express.Router()
 
 const dummy = (req, res) => {
@@ -11,7 +11,7 @@ router.get('/status', getStatus)
 router.get('/stats', getStats)
 router.post('/users', postNew)
 router.get("/connect", getConnect)
-// router.get("/disconnect", getDisconnect)
-// router.get("/users/me", getMe)
+router.get("/disconnect", getDisconnect)
+router.get("/users/me", getMe)
 
 export default router 

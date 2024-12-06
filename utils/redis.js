@@ -33,7 +33,7 @@ class RedisClient {
      * @returns {String | Object}
      */
     get = async (key) => {
-        return promisify(this.isClientConnected.GET).bind(this.client)(key)
+        return promisify(this.client.GET).bind(this.client)(key)
     }
     /**
      * Stores a key and it's value along with expiration time.
@@ -43,7 +43,7 @@ class RedisClient {
      * @returns {Promise<void>}
      */
     set = async (key, duration, value) => {
-        await promisify(this.redisCient.SETEX).bind(this.client)(key, duration, value);
+        await promisify(this.client.SETEX).bind(this.client)(key, duration, value);
     }
     /**
      * Deletes a value with the given key

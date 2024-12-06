@@ -2,7 +2,7 @@ import dbClient from "../utils/db"
 import { v4 } from "uuid"
 import sha1 from "sha1"
 import redisClient from "../utils/redis"
-
+import mongoDBCore from "mongodb/lib/core"
 const getConnect = async (req, res) => {
     /**
      * Sign-in the user by generating a new authentication token.
@@ -22,8 +22,19 @@ const getConnect = async (req, res) => {
     // Otherwise,
     const randomString = v4()
     const userKey = `auth_${randomString}`
-    redisClient.set(userKey, 24 * 3600, userExists.id)
+    console.log(userExists)
+    await redisClient.set(userKey, 24 * 3600, userExists._id)
     res.status(200).json({ "token": randomString })
 }
 
-export {getConnect}
+const getDisconnect = async (req, res) => {
+    /**
+     *  Signs out the user based on the token.
+     */
+    const token = req.headers['x-token'];
+
+    await redisClient.del(`auth_${token}`);
+    res.status(204).send();
+}
+
+export {getConnect, getDisconnect}
