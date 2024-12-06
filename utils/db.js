@@ -1,43 +1,49 @@
-import mongodb from "mongodb"
+import mongodb from "mongodb";
+
 /**
-  * Represents the DBClient
-  */
+ * Represents the DBClient
+ */
 class DBClient {
-    /**
-    * Creates an instance of the DBClient class.
-    */
-
     constructor() {
-        const host = process.env.DB_HOST || "localhost"
-        const port = process.env.DB_PORT || 27017
-        const database = process.env.DB_DATABASE || "files_manager"
-        const dbURL = `mongodb://${host}:${post}/${database}`
+        const host = process.env.DB_HOST || "localhost";
+        const port = process.env.DB_PORT || 27017;
+        const database = process.env.DB_DATABASE || "files_manager";
+        const dbURL = `mongodb://${host}:${port}/${database}`;
 
-        this.client = new mongodb.MongoClient(dbURL, { useUnifiedTopology: true })
-        this.client.connect()
+        this.databaseName = database;
+        this.client = new mongodb.MongoClient(dbURL, { useUnifiedTopology: true });
+        this.connect(); 
     }
+
+    async connect() {
+        try {
+            await this.client.connect();
+            console.log("Connected to MongoDB");
+        } catch (error) {
+            console.error("Failed to connect to MongoDB:", error);
+        }
+    }
+
     /**
-     * Checks if a client is connected to the MongoDB server
-     * @returns {boolean}
+     * Returns the database instance
+     * @returns {mongodb.Db}
      */
+    db() {
+        return this.client.db(this.databaseName);
+    }
+
     isAlive() {
-        return this.client.isConnected();
+        return !!this.client.isConnected();
     }
-    /**
-     * Gets the number of users in the database.
-     * @returns {Promise<Number>}
-     */
-    nbFiles = async () => {
-        return this.client.db().collection('files').countDocuments()
+
+    async nbFiles() {
+        return this.db().collection("files").countDocuments();
     }
-    /**
-     * Gets the number of users in the database.
-     * @returns {Promise<Number>}
-     */
-    nbFiles = async () => {
-        return this.client.db().collection('files').countDocuments()
+
+    async nbUsers() {
+        return this.db().collection("users").countDocuments();
     }
 }
 
-const dbClient = new DBClient()
-export default dbClient
+const dbClient = new DBClient();
+export default dbClient;
