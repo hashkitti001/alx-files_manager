@@ -168,4 +168,69 @@ const getIndex = async (req, res) => {
 
 
 }
+
+const putPublish = async (req, res) => {
+    /**
+     *  Sets isPublic to true on the file document based on the ID
+     */
+    const { user } = req
+    const { id } = req.params
+    const userId = user._id.toString()
+    const fileFilter = {
+        _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
+        userId: new mongoDBCore.BSON.ObjectId(isValidId(userId) ? userId : NULL_ID)
+    }
+    const file = await dbClient.db().collection("files").findOne(fileFilter)
+    if (!file) {
+        res.status(404).json({ error: "Not found" })
+        return
+    }
+    await dbClient.db().collection("files").updateOne(fileFilter, {
+        $set: { isPublic: true }
+    })
+    res.status(200).json({
+        id,
+        userId,
+        name: file.name,
+        type: file.type,
+        isPublic: true,
+        parentId: file.parentId === ROOT_FOLDER_ID.toString()
+            ? 0
+            : file.parentId.toString(),
+    })
+    return
+}
+
+const putUnpublish = async (req, res) => {
+    /**
+     *  Sets isPublic to false on the file document based on the ID
+     *  
+     */
+    const { user } = req
+    const { id } = req.params
+    const userId = user._id.toString()
+    const fileFilter = {
+        _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
+        userId: new mongoDBCore.BSON.ObjectId(isValidId(userId) ? userId : NULL_ID)
+    }
+    const file = await dbClient.db().collection("files").findOne(fileFilter)
+    if (!file) {
+        res.status(404).json({ error: "Not found" })
+        return
+    }
+    await dbClient.db().collection("files").updateOne(fileFilter, {
+        $set: { isPublic: false }
+    })
+    res.status(200).json({
+        id,
+        userId,
+        name: file.name,
+        type: file.type,
+        isPublic: false,
+        parentId: file.parentId === ROOT_FOLDER_ID.toString()
+            ? 0
+            : file.parentId.toString(),
+    })
+    return
+}
 export { postUpload, getShow, getIndex };
