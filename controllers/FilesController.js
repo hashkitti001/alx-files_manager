@@ -6,6 +6,7 @@ import { mkdir } from "fs/promises";
 import { v4 } from "uuid";
 import mongoDBCore from "mongodb/lib/core";
 import dbClient from "../utils/db";
+import Queue from 'bull/lib/queue'
 
 const VALID_UPLOAD_TYPES = {
     folder: "folder",
@@ -15,6 +16,7 @@ const VALID_UPLOAD_TYPES = {
 const DEFAULT_ROOT_FOLDER = 'files_manager';
 const ROOT_PARENT_ID = 0;
 const NULL_ID = Buffer.alloc(24, '0').toString('utf-8');
+const fileQueue = new Queue("thumbnail generation")
 
 const isValidId = (id) => {
     const size = 24;
@@ -68,7 +70,7 @@ const postUpload = async (req, res) => {
 
         await mkdir(baseDir, { recursive: true });
 
-        if (type !== "folder") {
+        if (type !== VALID_UPLOAD_TYPES.folder) {
             const localPath = path.join(baseDir, v4());
 
 
@@ -81,11 +83,17 @@ const postUpload = async (req, res) => {
                 return res.status(400).json({ error: "Invalid data or file write error" });
             }
         }
+        // Generate thumbnail here
+        if (type === VALID_FILE_TYPES.image) {
+            const jobName = `Image thumbnail [${userId}-${fileId}]`;
+            fileQueue.add({ userId, fileId, name: jobName });
+          }
 
 
         const insertionInfo = await dbClient.db().collection("files").insertOne(newFile);
         const fileId = insertionInfo.insertedId.toString();
 
+        
 
         return res.status(201).json({
             id: fileId,
