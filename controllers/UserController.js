@@ -1,6 +1,8 @@
 import dbClient from "../utils/db";
 import sha1 from "sha1";
 import redisClient from "../utils/redis";
+import mongoDBCore from "mongodb/lib/core"
+
 
 const postNew = async (req, res) => {
     const { email, password } = req.body;
@@ -26,7 +28,6 @@ const postNew = async (req, res) => {
         const userId = newUser.insertedId.toString();
         return res.status(201).json({ id: userId, email });
     } catch (error) {
-        console.error("Error creating user:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
@@ -48,17 +49,16 @@ const getMe = async (req, res) => {
         }
 
         const user = await dbClient.db().collection("users").findOne({
-            _id: new ObjectId(userId), // Correct ObjectId usage
+            _id: new mongoDBCore.BSON.ObjectId(userId), 
         });
 
         if (!user) {
             return res.status(401).json({ error: "Unauthorized" });
         }
 
-        // Return user details
+     
         return res.status(200).json({ id: user._id.toString(), email: user.email });
     } catch (error) {
-        console.error("Error retrieving user:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };

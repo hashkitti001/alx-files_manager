@@ -7,6 +7,8 @@ import { v4 } from "uuid";
 import mongoDBCore from "mongodb/lib/core";
 import dbClient from "../utils/db";
 import Queue from 'bull/lib/queue'
+import Buffer from 'node:buffer'
+import process from 'node:process'
 
 const VALID_UPLOAD_TYPES = {
     folder: "folder",
@@ -15,8 +17,10 @@ const VALID_UPLOAD_TYPES = {
 };
 const DEFAULT_ROOT_FOLDER = 'files_manager';
 const ROOT_PARENT_ID = 0;
+const ROOT_FOLDER_ID = 0;
 const NULL_ID = Buffer.alloc(24, '0').toString('utf-8');
 const fileQueue = new Queue("thumbnail generation")
+const MAX_FILES_PER_PAGE = 10
 
 const isValidId = (id) => {
     const size = 24;
@@ -54,7 +58,7 @@ const postUpload = async (req, res) => {
         }
 
         const userId = user._id.toString();
-        const baseDir = process.env.FOLDER_PATH?.trim() || path.join(os.tmpdir(), DEFAULT_ROOT_FOLDER);
+        const baseDir = process.env.FOLDER_PATH.trim() || path.join(os.tmpdir(), DEFAULT_ROOT_FOLDER);
 
 
         const newFile = {
@@ -79,12 +83,12 @@ const postUpload = async (req, res) => {
                 await fs.writeFile(localPath, fileBuffer);
                 newFile.localPath = localPath;
             } catch (error) {
-                console.error("Error writing file:", error);
+               
                 return res.status(400).json({ error: "Invalid data or file write error" });
             }
         }
         // Generate thumbnail here
-        if (type === VALID_FILE_TYPES.image) {
+        if (type === VALID_UPLOAD_TYPES.image) {
             const jobName = `Image thumbnail [${userId}-${fileId}]`;
             fileQueue.add({ userId, fileId, name: jobName });
           }
@@ -104,7 +108,6 @@ const postUpload = async (req, res) => {
             parentId: parentId === ROOT_PARENT_ID || parentId === ROOT_PARENT_ID.toString() ? 0 : parentId,
         });
     } catch (error) {
-        console.error("Error uploading file:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
