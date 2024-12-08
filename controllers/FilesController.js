@@ -1,6 +1,7 @@
-import fs from "fs/promises"; // Use promise-based fs methods
+import fs from "fs/promises";
 import path from "path";
 import os from "os";
+import mt from "mime-types"
 import { mkdir } from "fs/promises";
 import { v4 } from "uuid";
 import mongoDBCore from "mongodb/lib/core";
@@ -233,4 +234,34 @@ const putUnpublish = async (req, res) => {
     })
     return
 }
-export { postUpload, getShow, getIndex };
+const getFile = async (req, res) => {
+    /**
+     *  Returns the content of the file document based on the ID:
+     */
+    const { user } = req
+    const { id } = req.params
+    const userId = user ? user._id.toString() : " ";
+
+    const fileFilter = {
+        _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID)
+    }
+    const file = await dbClient.db().collection("files").findOne(fileFilter)
+    if (!file || (!file.isPublic && (file.userId.toString() !== userId))) {
+        res.status(404).json({ error: "Not found" })
+        return
+    }
+    if (file.type === VALID_UPLOAD_TYPES.folder) {
+        res.status(400).json({ error: "A folder doesn't have content" })
+        return
+    }
+    const localPath = file.localPath
+    const fileContent = await fs.readFile(localPath)
+
+    const fileMime = mt.lookup(file.name) || "application/octet-stream"
+
+    res.setHeader("Content-Type", fileMime)
+    res.status(200).send(fileContent)
+    return;
+
+}
+export { postUpload, getShow, getIndex, putPublish, putUnpublish, getFile };

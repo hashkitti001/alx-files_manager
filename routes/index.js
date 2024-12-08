@@ -19,5 +19,8 @@ router.get("/users/me", xTokenAuthenticate, getMe)
 router.post("/files", xTokenAuthenticate, postUpload)
 router.get("/files/:id", xTokenAuthenticate, getShow)
 router.get("/files", xTokenAuthenticate, getIndex)
+router.put("/files/:id/publish", putPublish)
+router.put("/files/:id/unpublish", putUnpublish)
+router.get("/files/:id/data", getFile)
 
 export default router 
