@@ -18,6 +18,6 @@ router.get("/disconnect", getDisconnect)
 router.get("/users/me", xTokenAuthenticate, getMe)
 router.post("/files", xTokenAuthenticate, postUpload)
 router.get("/files/:id", xTokenAuthenticate, getShow)
-// router.get("/files", getIndex)
+router.get("/files", xTokenAuthenticate, getIndex)
 
 export default router 
